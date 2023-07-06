@@ -1,20 +1,21 @@
-import { createTheme } from '@mui/material/styles';
-import { green, blue } from '@mui/material/colors';
+import { createTheme } from "@mui/material/styles";
+import { green, blue, grey } from "@mui/material/colors";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: blue[800],
+      main: grey[800],
     },
     secondary: {
       main: green[500],
     },
   },
+  spacing: 8,
   components: {
     MuiLink: {
       styleOverrides: {
         root: {
-          textDecoration: 'none',
+          textDecoration: "none",
         },
       },
     },

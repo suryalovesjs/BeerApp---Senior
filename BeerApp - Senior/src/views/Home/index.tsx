@@ -1,64 +1,81 @@
-import { useEffect, useState } from 'react';
-import { fetchData } from './utils';
-import { Beer } from '../../types';
-import { Link as RouterLink } from 'react-router-dom';
-import { Button, Checkbox, Paper, TextField, Link } from '@mui/material';
-import styles from './Home.module.css';
+import { useEffect, useState } from "react";
+import { fetchSavedItems } from "./utils";
+import { Beer } from "../../types";
+import { useNavigate } from "react-router-dom";
+import { Paper, Grid, Typography } from "@mui/material";
+import Banner from "../../components/Banner";
+import BeerListItem from "../../components/BeerListItem";
 
 const Home = () => {
-  const [beerList, setBeerList] = useState<Array<Beer>>([]);
   const [savedList, setSavedList] = useState<Array<Beer>>([]);
 
-  // eslint-disable-next-line
-  useEffect(fetchData.bind(this, setBeerList), []);
+  const navigate = useNavigate();
+
+  const onBeerClick = (id: string) => navigate(`/beer/${id}`);
+
+  useEffect(() => {
+    fetchSavedItems(setSavedList);
+  }, []);
+
+  const toggleFavorite = (
+    event: React.MouseEvent<Element, MouseEvent>,
+    id: string
+  ) => {
+    event.stopPropagation();
+
+    const beer = savedList.find((beer) => beer.id === id);
+
+    if (beer) {
+      if (savedList.find((favBeer) => favBeer.id === id)) {
+        setSavedList(savedList.filter((favBeer) => favBeer.id !== id));
+      } else {
+        setSavedList([...savedList, beer]);
+      }
+    }
+  };
 
   return (
-    <article>
-      <section>
-        <main>
+    <>
+      <Banner large />
+      <Grid container spacing={2} padding={2} alignItems="center">
+        <Grid item xs={12}>
           <Paper>
-            <div className={styles.listContainer}>
-              <div className={styles.listHeader}>
-                <TextField label='Filter...' variant='outlined' />
-                <Button variant='contained'>Reload list</Button>
-              </div>
-              <ul className={styles.list}>
-                {beerList.map((beer, index) => (
-                  <li key={index.toString()}>
-                    <Checkbox />
-                    <Link component={RouterLink} to={`/beer/${beer.id}`}>
-                      {beer.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <Grid container spacing={2} padding={2} alignItems="center">
+              {savedList.length ? (
+                <Grid item xs={12} alignContent="center">
+                  <Typography fontSize="large">Your Favourites</Typography>
+                </Grid>
+              ) : (
+                <Grid container xs={12}>
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      fontSize: "50px",
+                      fontWeight: "100",
+                      margin: "auto",
+                    }}
+                  >
+                    Tap into the flavor paradise! Discover and save your
+                    favorite beers now!
+                  </Typography>
+                </Grid>
+              )}
+              {savedList.map((beer) => (
+                <Grid item xs={12} sm={6} md={4} lg={6}>
+                  <BeerListItem
+                    key={beer.id}
+                    beer={beer}
+                    favorites={savedList}
+                    onBeerClick={onBeerClick}
+                    toggleFavorite={toggleFavorite}
+                  />
+                </Grid>
+              ))}
+            </Grid>
           </Paper>
-
-          <Paper>
-            <div className={styles.listContainer}>
-              <div className={styles.listHeader}>
-                <h3>Saved items</h3>
-                <Button variant='contained' size='small'>
-                  Remove all items
-                </Button>
-              </div>
-              <ul className={styles.list}>
-                {savedList.map((beer, index) => (
-                  <li key={index.toString()}>
-                    <Checkbox />
-                    <Link component={RouterLink} to={`/beer/${beer.id}`}>
-                      {beer.name}
-                    </Link>
-                  </li>
-                ))}
-                {!savedList.length && <p>No saved items</p>}
-              </ul>
-            </div>
-          </Paper>
-        </main>
-      </section>
-    </article>
+        </Grid>
+      </Grid>
+    </>
   );
 };
 

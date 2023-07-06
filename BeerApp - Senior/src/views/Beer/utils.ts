@@ -1,6 +1,6 @@
-import { getBeer } from '../../api';
-import { Beer } from '../../types';
-import handle from '../../utils/error';
+import { getBeer } from "../../api";
+import { Beer } from "../../types";
+import handle from "../../utils/error";
 
 const fetchData = (setData: (data: Beer) => void, id?: string) => {
   if (!id) return;

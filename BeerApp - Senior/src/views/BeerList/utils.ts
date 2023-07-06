@@ -1,11 +1,14 @@
-import { getBeerList } from '../../api';
-import { Beer } from '../../types';
-import handle from '../../utils/error';
+import { getBeerList, getBeerMetaData, searchBeerList } from "../../api";
+import { ApiParams, Beer } from "../../types";
+import handle from "../../utils/error";
 
-const fetchData = (setData: (data: Array<Beer>) => void) => {
+const fetchBeerList = (
+  setData: (data: Array<Beer>) => void,
+  params: ApiParams
+) => {
   (async () => {
     try {
-      const response = await getBeerList();
+      const response = await getBeerList(params || {});
       setData(response.data);
     } catch (error) {
       handle(error);
@@ -13,4 +16,15 @@ const fetchData = (setData: (data: Array<Beer>) => void) => {
   })();
 };
 
-export { fetchData };
+const fetchMeta = (setData: (data: number) => void, params: ApiParams) => {
+  (async () => {
+    try {
+      const response = await getBeerMetaData(params || {});
+      setData(response.data.total);
+    } catch (error) {
+      handle(error);
+    }
+  })();
+};
+
+export { fetchBeerList, fetchMeta };
