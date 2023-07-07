@@ -1,24 +1,52 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { connect, ConnectedProps } from "react-redux";
 import { Beer as IBeer } from "../../types";
-import { fetchData } from "./utils";
 import { useParams } from "react-router-dom";
 import { Grid, Paper, Typography } from "@mui/material";
 import { styled } from "@mui/system";
 import Banner from "../../components/Banner";
 import { LocalBarOutlined } from "@mui/icons-material";
+import { fetchBeer, setBeerData } from "../../store/actions";
+import { RootState } from "../../store";
 
-const Beer = () => {
+const mapState = (state: RootState) => ({
+  beerData: state.beer.beerData,
+});
+
+const mapDispatch = {
+  fetchBeer,
+  setBeerData,
+};
+
+const connector = connect(mapState, mapDispatch);
+
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+const Beer: React.FC<PropsFromRedux> = ({
+  beerData,
+  fetchBeer,
+  setBeerData,
+}) => {
   const { id } = useParams();
-  const [beer, setBeer] = useState<IBeer>();
+
   useEffect(() => {
-    fetchData(setBeer, id);
+    if (!id) {
+      return;
+    }
+    if (!beerData[id]) {
+      fetchBeer(id);
+    }
   }, [id]);
 
+  if (!id) {
+    return <h1>Wrong info</h1>;
+  }
+
+  const beer = beerData[id] as IBeer;
+
   const Label = styled("b")(({ theme }) => {
-    // console.log("Theme", theme);
     return {
       fontWeight: "bold",
-      // marginRight: `${theme.spacing(1)}px`,
     };
   });
 
@@ -70,4 +98,4 @@ const Beer = () => {
   );
 };
 
-export default Beer;
+export default connector(Beer);

@@ -1,20 +1,39 @@
-import { useEffect, useState } from "react";
-import { fetchSavedItems } from "./utils";
+import { useEffect } from "react";
+import { connect, ConnectedProps } from "react-redux";
 import { Beer } from "../../types";
 import { useNavigate } from "react-router-dom";
 import { Paper, Grid, Typography } from "@mui/material";
 import Banner from "../../components/Banner";
 import BeerListItem from "../../components/BeerListItem";
+import { RootState } from "../../store";
+import { fetchFavoriteBeers, updateFavoriteBeers } from "../../store/actions";
 
-const Home = () => {
-  const [savedList, setSavedList] = useState<Array<Beer>>([]);
+const mapState = (state: RootState) => ({
+  favorites: state.beer.favorites,
+});
+
+const mapDispatch = {
+  fetchFavoriteBeers,
+  updateFavoriteBeers,
+};
+
+const connector = connect(mapState, mapDispatch);
+
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+const Home: React.FC<PropsFromRedux> = ({
+  favorites,
+  fetchFavoriteBeers,
+  updateFavoriteBeers,
+}) => {
+  // const [savedList, setSavedList] = useState<Array<Beer>>([]);
 
   const navigate = useNavigate();
 
   const onBeerClick = (id: string) => navigate(`/beer/${id}`);
 
   useEffect(() => {
-    fetchSavedItems(setSavedList);
+    fetchFavoriteBeers();
   }, []);
 
   const toggleFavorite = (
@@ -23,13 +42,15 @@ const Home = () => {
   ) => {
     event.stopPropagation();
 
-    const beer = savedList.find((beer) => beer.id === id);
+    const beer = favorites.find((beer: Beer) => beer.id === id);
 
     if (beer) {
-      if (savedList.find((favBeer) => favBeer.id === id)) {
-        setSavedList(savedList.filter((favBeer) => favBeer.id !== id));
+      if (favorites.find((favBeer: Beer) => favBeer.id === id)) {
+        updateFavoriteBeers(
+          favorites.filter((favBeer: Beer) => favBeer.id !== id)
+        );
       } else {
-        setSavedList([...savedList, beer]);
+        updateFavoriteBeers([...favorites, beer]);
       }
     }
   };
@@ -41,12 +62,12 @@ const Home = () => {
         <Grid item xs={12}>
           <Paper>
             <Grid container spacing={2} padding={2} alignItems="center">
-              {savedList.length ? (
+              {favorites.length ? (
                 <Grid item xs={12} alignContent="center">
                   <Typography fontSize="large">Your Favourites</Typography>
                 </Grid>
               ) : (
-                <Grid container xs={12}>
+                <Grid container>
                   <Typography
                     variant="h2"
                     sx={{
@@ -60,12 +81,11 @@ const Home = () => {
                   </Typography>
                 </Grid>
               )}
-              {savedList.map((beer) => (
-                <Grid item xs={12} sm={6} md={4} lg={6}>
+              {favorites.map((beer: Beer) => (
+                <Grid item key={beer.id} xs={12} sm={6} md={4} lg={6}>
                   <BeerListItem
-                    key={beer.id}
                     beer={beer}
-                    favorites={savedList}
+                    favorites={favorites}
                     onBeerClick={onBeerClick}
                     toggleFavorite={toggleFavorite}
                   />
@@ -79,4 +99,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default connector(Home);

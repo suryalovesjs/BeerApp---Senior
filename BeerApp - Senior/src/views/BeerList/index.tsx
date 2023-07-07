@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
-import { Beer, SORT, TYPE } from "../../types";
-import { fetchBeerList, fetchMeta } from "./utils";
+import { connect, ConnectedProps } from "react-redux";
+import { RootState } from "../../store";
+import {
+  fetchBeerList,
+  fetchFavoriteBeers,
+  fetchMeta,
+  updateFavoriteBeers,
+} from "../../store/actions/beerAction";
+import { SORT, TYPE } from "../../types";
 import { Grid, Pagination, SelectChangeEvent, Typography } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import BeerListItem from "../../components/BeerListItem";
-import { getItem, setItem } from "../../utils";
 import Banner from "../../components/Banner";
 import BeerListControls from "./BeerListControls";
 
@@ -15,12 +21,35 @@ interface PageMeta {
   name?: string;
 }
 
-const BeerList = () => {
+const mapState = (state: RootState) => ({
+  beerList: state.beer.beerList,
+  totalList: state.beer.totalList,
+  favorites: state.beer.favorites,
+});
+
+const mapDispatch = {
+  fetchBeerList,
+  fetchMeta,
+  fetchFavoriteBeers,
+  updateFavoriteBeers,
+};
+
+const connector = connect(mapState, mapDispatch);
+
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+const BeerList: React.FC<PropsFromRedux> = ({
+  beerList,
+  totalList,
+  favorites,
+  fetchBeerList,
+  fetchMeta,
+  updateFavoriteBeers,
+  fetchFavoriteBeers,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [beerList, setBeerList] = useState<Array<Beer>>([]);
-  const [totalList, setTotalList] = useState<number>(1);
   const [currentPageMeta, setCurrentPageMeta] = useState<PageMeta>({
     page: 1,
   });
@@ -28,9 +57,6 @@ const BeerList = () => {
   const [filterType, setFilterType] = useState<TYPE | undefined>();
   const [sortType, setSortType] = useState<SORT | undefined>();
   const [searchValue, setSearchValue] = useState<string>("");
-  const [favorites, setFavorites] = useState<Beer[]>(() => {
-    return getItem("favorites") || [];
-  });
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(
     null
   );
@@ -66,20 +92,17 @@ const BeerList = () => {
     const params = {
       page: currentPageMeta.page,
       per_page: 20,
-      ...(currentPageMeta.name
+      ...(currentPageMeta.sort
         ? { sort: `type,name:${currentPageMeta.sort}` }
         : {}),
       ...(currentPageMeta.type ? { by_type: currentPageMeta.type } : {}),
       ...(currentPageMeta.name ? { by_name: currentPageMeta.name } : {}),
     };
 
-    fetchBeerList(setBeerList, params);
-    fetchMeta(setTotalList, params);
+    fetchBeerList(params);
+    fetchMeta(params);
+    fetchFavoriteBeers();
   }, [currentPageMeta]);
-
-  useEffect(() => {
-    setItem("favorites", favorites);
-  }, [favorites]);
 
   useEffect(() => {
     return () => {
@@ -100,9 +123,9 @@ const BeerList = () => {
 
     if (beer) {
       if (favorites.find((favBeer) => favBeer.id === id)) {
-        setFavorites(favorites.filter((favBeer) => favBeer.id !== id));
+        updateFavoriteBeers(favorites.filter((favBeer) => favBeer.id !== id));
       } else {
-        setFavorites([...favorites, beer]);
+        updateFavoriteBeers([...favorites, beer]);
       }
     }
   };
@@ -191,4 +214,4 @@ const BeerList = () => {
   );
 };
 
-export default BeerList;
+export default connector(BeerList);
