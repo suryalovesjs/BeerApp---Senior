@@ -7,6 +7,7 @@ import { theme } from "./styles/theme";
 import "./styles/global.css";
 import { Provider } from "react-redux";
 import { store } from "./store";
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -22,3 +23,5 @@ root.render(
     </Provider>
   </React.StrictMode>
 );
+
+serviceWorkerRegistration.register();
